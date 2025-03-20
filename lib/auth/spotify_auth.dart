@@ -316,15 +316,39 @@ class SpotifyAuth {
           .getTracksByPlaylistId(referencePlaylist.id!)
           .all();
 
-      // トラックURIを収集
-      final trackUris = tracks
+      // 目標総再生時間（ミリ秒）
+      final targetDurationMs = durationMinutes * 60 * 1000;
+
+      // フィルタリングされたトラックを格納するリスト
+      final filteredTracks = <Track>[];
+      var currentDurationMs = 0;
+
+      for (final track in tracks) {
+        if (currentDurationMs >= targetDurationMs) break;
+
+        try {
+          if (track.durationMs != null &&
+              currentDurationMs + track.durationMs! <= targetDurationMs) {
+            filteredTracks.add(track);
+            currentDurationMs += track.durationMs!;
+          }
+          // レート制限を考慮して少し待機
+          await Future.delayed(const Duration(milliseconds: 50));
+        } catch (e) {
+          print('トラック分析エラー（${track.name}）: $e');
+          // エラーが発生しても続行
+        }
+      }
+
+      // フィルタリングされたトラックのURIを収集
+      final trackUris = filteredTracks
           .where((track) => track.uri != null)
           .map((track) => track.uri!)
           .toList();
 
-      // トラックを追加（100曲ずつに分割して追加）
+      // トラックを追加（50曲ずつに分割して追加）
       if (trackUris.isNotEmpty) {
-        const batchSize = 100;
+        const batchSize = 50;
         for (var i = 0; i < trackUris.length; i += batchSize) {
           final end = (i + batchSize < trackUris.length)
               ? i + batchSize
@@ -345,7 +369,9 @@ class SpotifyAuth {
         }
       }
 
-      return newPlaylist;
+      // 作成したプレイリストの最新情報を取得
+      final updatedPlaylist = await _spotifyApi!.playlists.get(newPlaylist.id!);
+      return updatedPlaylist;
     } catch (e) {
       print('プレイリスト作成エラー: $e');
       throw Exception('プレイリストの作成に失敗しました: $e');
