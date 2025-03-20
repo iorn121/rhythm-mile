@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spotify/spotify.dart';
+import 'create_playlist_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final SpotifyApi spotify;
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final me = await widget.spotify.me.get();
       final playlistsPage = await widget.spotify.playlists.me.all();
-      
+
       setState(() {
         _playlists = playlistsPage.toList();
         _isLoading = false;
@@ -85,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 50,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: NetworkImage(playlist.images!.first.url ?? ''),
+                                image: NetworkImage(
+                                    playlist.images!.first.url ?? ''),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -93,9 +95,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                         return Card(
                           child: ListTile(
-                            leading: leadingImage ?? const Icon(Icons.music_note),
+                            leading:
+                                leadingImage ?? const Icon(Icons.music_note),
                             title: Text(playlist.name ?? '名称不明'),
-                            subtitle: Text('${playlist.tracksLink?.total ?? 0} 曲'),
+                            subtitle:
+                                Text('${playlist.tracksLink?.total ?? 0} 曲'),
                             onTap: () {
                               // TODO: プレイリストの詳細画面へ遷移
                             },
@@ -103,6 +107,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreatePlaylistScreen(),
+            ),
+          ).then((created) {
+            if (created == true) {
+              _loadPlaylists();
+            }
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
-} 
+}

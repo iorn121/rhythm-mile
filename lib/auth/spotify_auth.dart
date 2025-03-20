@@ -25,21 +25,28 @@ class SpotifyAuth {
   static Future<void>? _initializationFuture;
   static SpotifyApi? _spotifyApi;
 
+  static final SpotifyAuth _instance = SpotifyAuth._internal();
+  factory SpotifyAuth() => _instance;
+  SpotifyAuth._internal();
+
   /// PKCE用のランダム文字列を生成
   static String _generateRandomString(int length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     final random = Random.secure();
-    return List.generate(length, (_) => chars[random.nextInt(chars.length)]).join();
+    return List.generate(length, (_) => chars[random.nextInt(chars.length)])
+        .join();
   }
 
   /// コードチャレンジを生成
   static String _generateCodeChallenge(String verifier) {
     final bytes = utf8.encode(verifier);
     final digest = sha256.convert(bytes);
-    return base64Url.encode(digest.bytes)
-      .replaceAll('=', '')
-      .replaceAll('+', '-')
-      .replaceAll('/', '_');
+    return base64Url
+        .encode(digest.bytes)
+        .replaceAll('=', '')
+        .replaceAll('+', '-')
+        .replaceAll('/', '_');
   }
 
   static Future<SpotifyApi> initialize() async {
@@ -53,11 +60,11 @@ class SpotifyAuth {
     _initializationFuture ??= _initialize();
     await _initializationFuture;
     print('初期化が完了しました'); // デバッグ用
-    
+
     if (_spotifyApi != null) {
       return _spotifyApi!;
     }
-    
+
     return await authenticate();
   }
 
@@ -82,7 +89,7 @@ class SpotifyAuth {
 
   static Future<void> _setupAuthListener() async {
     print('認証リスナーのセットアップ開始'); // デバッグ用
-    
+
     // 既存のサブスクリプションをクリーンアップ
     await _subscription?.cancel();
     _subscription = null;
@@ -189,7 +196,7 @@ class SpotifyAuth {
       if (code == null) throw Exception('認証コードの取得に失敗しました');
 
       final tokenUri = Uri.https('accounts.spotify.com', '/api/token');
-      
+
       final requestBody = {
         'grant_type': 'authorization_code',
         'code': code,
@@ -201,14 +208,16 @@ class SpotifyAuth {
       print('トークンリクエスト準備完了'); // デバッグ用
 
       final encodedBody = requestBody.entries
-          .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .map((e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
           .join('&');
 
       final response = await http.post(
         tokenUri,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': 'Basic ${base64Encode(utf8.encode('$clientId:$clientSecret'))}',
+          'Authorization':
+              'Basic ${base64Encode(utf8.encode('$clientId:$clientSecret'))}',
         },
         body: encodedBody,
       );
@@ -223,7 +232,8 @@ class SpotifyAuth {
         } catch (e) {
           errorBody = {'error': 'unknown', 'error_description': response.body};
         }
-        throw Exception('アクセストークンの取得に失敗しました: ${errorBody['error_description'] ?? errorBody['error'] ?? response.body}');
+        throw Exception(
+            'アクセストークンの取得に失敗しました: ${errorBody['error_description'] ?? errorBody['error'] ?? response.body}');
       }
 
       final tokenData = jsonDecode(response.body);
@@ -265,4 +275,80 @@ class SpotifyAuth {
     _initializationFuture = null;
     print('完全なクリーンアップ完了'); // デバッグ用
   }
-} 
+
+  Future<List<PlaylistSimple>> getUserPlaylists() async {
+    if (_spotifyApi == null) {
+      throw Exception('SpotifyAuth is not initialized');
+    }
+
+    try {
+      final me = await _spotifyApi!.me.get();
+      final playlists = await _spotifyApi!.playlists.me.all();
+      return playlists.toList();
+    } catch (e) {
+      throw Exception('Failed to get user playlists: $e');
+    }
+  }
+
+  Future<Playlist> createPlaylist({
+    required String name,
+    required int targetBpm,
+    required int durationMinutes,
+    required PlaylistSimple referencePlaylist,
+  }) async {
+    if (_spotifyApi == null) {
+      throw Exception('SpotifyAuth is not initialized');
+    }
+
+    try {
+      final me = await _spotifyApi!.me.get();
+
+      // 新しいプレイリストを作成
+      final newPlaylist = await _spotifyApi!.playlists.createPlaylist(
+        me.id!,
+        name,
+        description: 'BPM: $targetBpm, 再生時間: ${durationMinutes}分',
+        public: false,
+      );
+
+      // 参考プレイリストから曲を取得（一度に取得）
+      final tracks = await _spotifyApi!.playlists
+          .getTracksByPlaylistId(referencePlaylist.id!)
+          .all();
+
+      // トラックURIを収集
+      final trackUris = tracks
+          .where((track) => track.uri != null)
+          .map((track) => track.uri!)
+          .toList();
+
+      // トラックを追加（100曲ずつに分割して追加）
+      if (trackUris.isNotEmpty) {
+        const batchSize = 100;
+        for (var i = 0; i < trackUris.length; i += batchSize) {
+          final end = (i + batchSize < trackUris.length)
+              ? i + batchSize
+              : trackUris.length;
+          final batch = trackUris.sublist(i, end);
+
+          try {
+            await _spotifyApi!.playlists.addTracks(
+              batch,
+              newPlaylist.id!,
+            );
+            // レート制限を考慮して少し待機
+            await Future.delayed(const Duration(milliseconds: 100));
+          } catch (e) {
+            print('トラック追加エラー（バッチ $i-$end）: $e');
+            // エラーが発生しても続行
+          }
+        }
+      }
+
+      return newPlaylist;
+    } catch (e) {
+      print('プレイリスト作成エラー: $e');
+      throw Exception('プレイリストの作成に失敗しました: $e');
+    }
+  }
+}
