@@ -49,7 +49,7 @@ dependencies:
   geolocator: ^11.0.0
 
   # Spotify関連
-  spotify: ^0.13.3
+  spotify: ^0.16.1
   flutter_web_auth_2: ^5.1.0
   http: ^1.3.0
 
