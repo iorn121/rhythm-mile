@@ -45,7 +45,7 @@ dependencies:
 
   # マップ関連
   google_maps_flutter: ^2.19.0
-  location: ^5.0.3
+  location: ^10.0.2
   geolocator: ^14.1.2
 
   # Spotify関連
