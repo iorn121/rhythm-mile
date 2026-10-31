@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _error = null;
       });
 
-      final playlistsPage = await widget.spotify.me.playlists.all();
+      final playlistsPage = await widget.spotify.me.playlists.saved().all();
       
       setState(() {
         _playlists = playlistsPage.toList();
