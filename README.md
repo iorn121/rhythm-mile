@@ -4,6 +4,18 @@
 
 リズムマイルは、ランニングと BPM に基づいた音楽プレイリストを組み合わせた革新的なモバイルアプリケーションです。ランナーのペースに合わせて最適な音楽を提供することで、より楽しく効果的な運動体験を実現します。
 
+## 実装ステータス（2026-05-31）
+
+| 領域 | 状態 | 備考 |
+| --- | --- | --- |
+| Flutter 骨格 | 実装済み | `lib/main.dart`, 画面ルーティング |
+| Spotify 認証 | 部分 | `spotify_auth.dart`, repository 骨格 |
+| GPS / ランニング記録 | 未実装 | README フェーズ 1 要件 |
+| ルート / Maps | 未実装 | |
+| BPM プレイリスト | 未実装 | |
+| Firebase | 未実装 | README 記載のみ |
+| CI / LICENSE | 本 PR | analyze + test, Dependabot |
+
 ## 対応プラットフォーム
 
 ### フェーズ 1（優先実装）
@@ -192,4 +204,57 @@
 
 ## ライセンス
 
-MIT License
+MIT License — 詳細は [LICENSE](./LICENSE) を参照。
+
+---
+
+## 今後の対応策
+
+### 短期（hygiene PR merge）
+
+- **まず本 PR（`chore/ci-license-docs`）をマージ** — LICENSE ファイル、Dependabot、Flutter CI（analyze + test）
+
+### 中期（P1 機能）
+
+- README の PRD と `lib/` 実装の差分表を維持更新（現状: 認証/ホーム/Spotify 骨格のみ）
+- フェーズ 1 の GPS ランニング記録・ルート作成の最小 MVP
+- Firebase / Maps / Spotify の `.env.example` とセットアップ手順の具体化
+
+### 長期（ポートフォリオ連携）
+
+- [iorn121.github.io](https://github.com/iorn121/iorn121.github.io) の `articles/create/programming/rhythm-mile/` 子ページを README 実装ステータスと同期
+- デモ APK またはスクリーンショットを子ページに追加
+
+---
+
+## 改善点バックログ
+
+> 監査日: 2026-05-31。Tech: Flutter / Spotify 連携骨格。CI・LICENSE ファイル・Dependabot は本 PR で追加。
+
+### 機能 (Functionality)
+
+- [ ] `[P1]` README 要件（GPS 記録、ルート、BPM プレイリスト）の大半が未実装 — 実装ステータス表を冒頭に追加
+- [ ] `[P2]` Spotify 認証フローの完成とエラーハンドリング
+- [ ] `[P2]` Google Maps / Firebase 設定手順の README 具体化
+- [ ] `[P3]` ゲーミフィケーション・健康管理はフェーズ 2 以降
+
+### デザイン/UX (Design)
+
+- [ ] `[P2]` Material Design 3 テーマの SSOT 化
+- [ ] `[P3]` iOS / PWA はフェーズ 2 まで UI 方針のみ
+
+### セキュリティ (Security)
+
+- [ ] `[P2]` Spotify / Firebase シークレットを `.gitignore` + example で管理
+- [ ] `[P3]` Dependabot マージ前に CI 必須化
+
+### システム設計 (System Design)
+
+- [ ] `[P2]` `lib/features/` と旧 `lib/screens/` の整理・統合
+- [ ] `[P3]` テストカバレッジ拡大（widget_test 以外）
+
+### ドキュメント/運用 (Docs & Ops)
+
+- [ ] `[P1]` LICENSE ファイル追加 — 本 PR
+- [ ] `[P1]` CI 未整備 — 本 PR
+- [ ] `[P2]` ポートフォリオ子ページとの定期同期チェックリスト
