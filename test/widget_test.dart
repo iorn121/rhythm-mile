@@ -6,7 +6,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('shows the login screen', (tester) async {
-    await dotenv.testLoad(fileInput: '''
+    dotenv.testLoad(fileInput: '''
 SPOTIFY_CLIENT_ID=test
 SPOTIFY_REDIRECT_URL=rhythm-mile://callback
 SPOTIFY_CLIENT_SECRET=test
