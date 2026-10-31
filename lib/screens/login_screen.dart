@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:spotify/spotify.dart';
 import '../auth/spotify_auth.dart';
 import 'home_screen.dart';
 
@@ -43,8 +42,8 @@ class LoginScreen extends StatelessWidget {
                     );
                   }
                 } catch (e, stackTrace) {
-                  print('ログインエラー: $e');
-                  print('スタックトレース: $stackTrace');
+                  debugPrint('ログインエラー: $e');
+                  debugPrint('スタックトレース: $stackTrace');
                   
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();

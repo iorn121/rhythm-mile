@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -43,16 +44,16 @@ class SpotifyAuth {
   }
 
   static Future<SpotifyApi> initialize() async {
-    print('initialize()が呼び出されました'); // デバッグ用
+    debugPrint('initialize()が呼び出されました'); // デバッグ用
     if (_isInitialized && _spotifyApi != null) {
-      print('既存のSpotifyApiインスタンスを返却します'); // デバッグ用
+      debugPrint('既存のSpotifyApiインスタンスを返却します'); // デバッグ用
       return _spotifyApi!;
     }
 
-    print('初期化を開始します'); // デバッグ用
+    debugPrint('初期化を開始します'); // デバッグ用
     _initializationFuture ??= _initialize();
     await _initializationFuture;
-    print('初期化が完了しました'); // デバッグ用
+    debugPrint('初期化が完了しました'); // デバッグ用
     
     if (_spotifyApi != null) {
       return _spotifyApi!;
@@ -62,26 +63,26 @@ class SpotifyAuth {
   }
 
   static Future<void> _initialize() async {
-    print('_initialize()が呼び出されました'); // デバッグ用
+    debugPrint('_initialize()が呼び出されました'); // デバッグ用
     if (!_isInitialized) {
-      print('AppLinksの初期化を開始'); // デバッグ用
+      debugPrint('AppLinksの初期化を開始'); // デバッグ用
       _appLinks = AppLinks();
       // 初期リンクをクリア
       try {
         final initialLink = await _appLinks!.getInitialAppLink();
-        print('初期リンク: $initialLink'); // デバッグ用
+        debugPrint('初期リンク: $initialLink'); // デバッグ用
       } catch (e) {
-        print('初期リンク取得エラー: $e'); // デバッグ用
+        debugPrint('初期リンク取得エラー: $e'); // デバッグ用
       }
       _isInitialized = true;
-      print('AppLinksの初期化完了'); // デバッグ用
+      debugPrint('AppLinksの初期化完了'); // デバッグ用
     } else {
-      print('既に初期化済みです'); // デバッグ用
+      debugPrint('既に初期化済みです'); // デバッグ用
     }
   }
 
   static Future<void> _setupAuthListener() async {
-    print('認証リスナーのセットアップ開始'); // デバッグ用
+    debugPrint('認証リスナーのセットアップ開始'); // デバッグ用
     
     // 既存のサブスクリプションをクリーンアップ
     await _subscription?.cancel();
@@ -90,13 +91,13 @@ class SpotifyAuth {
 
     _subscription = _appLinks!.uriLinkStream.listen(
       (uri) {
-        print('URIを受信: $uri'); // デバッグ用
+        debugPrint('URIを受信: $uri'); // デバッグ用
         if (!_authCompleter!.isCompleted) {
           _authCompleter!.complete(uri);
         }
       },
       onError: (error) {
-        print('URIリスナーエラー: $error'); // デバッグ用
+        debugPrint('URIリスナーエラー: $error'); // デバッグ用
         if (!_authCompleter!.isCompleted) {
           _authCompleter!.completeError(error);
         }
@@ -104,31 +105,31 @@ class SpotifyAuth {
       cancelOnError: false,
     );
 
-    print('認証リスナーのセットアップ完了'); // デバッグ用
+    debugPrint('認証リスナーのセットアップ完了'); // デバッグ用
   }
 
   static Future<void> _cleanup() async {
-    print('クリーンアップ開始'); // デバッグ用
+    debugPrint('クリーンアップ開始'); // デバッグ用
     await _subscription?.cancel();
     _subscription = null;
     _authCompleter = null;
     _isAuthenticating = false;
-    print('クリーンアップ完了'); // デバッグ用
+    debugPrint('クリーンアップ完了'); // デバッグ用
   }
 
   static Future<SpotifyApi> authenticate() async {
     if (_spotifyApi != null) {
-      print('既存のSpotifyApiインスタンスを返却'); // デバッグ用
+      debugPrint('既存のSpotifyApiインスタンスを返却'); // デバッグ用
       return _spotifyApi!;
     }
 
     if (_isAuthenticating) {
-      print('認証プロセスが進行中'); // デバッグ用
+      debugPrint('認証プロセスが進行中'); // デバッグ用
       throw Exception('認証プロセスが進行中です。しばらくお待ちください。');
     }
 
     _isAuthenticating = true;
-    print('認証プロセス開始: ${DateTime.now()}'); // デバッグ用
+    debugPrint('認証プロセス開始: ${DateTime.now()}'); // デバッグ用
 
     try {
       if (!_isInitialized) {
@@ -160,7 +161,7 @@ class SpotifyAuth {
         'state': state,
       });
 
-      print('認証URL生成完了: $authUri'); // デバッグ用
+      debugPrint('認証URL生成完了: $authUri'); // デバッグ用
 
       if (!await launchUrl(
         authUri,
@@ -169,7 +170,7 @@ class SpotifyAuth {
         throw Exception('認証URLを開けませんでした');
       }
 
-      print('ブラウザで認証URL開始'); // デバッグ用
+      debugPrint('ブラウザで認証URL開始'); // デバッグ用
 
       final uri = await _authCompleter!.future.timeout(
         const Duration(minutes: 5),
@@ -178,7 +179,7 @@ class SpotifyAuth {
         },
       );
 
-      print('コールバックURI受信: $uri'); // デバッグ用
+      debugPrint('コールバックURI受信: $uri'); // デバッグ用
 
       // 受信したstateの検証
       if (uri.queryParameters['state'] != state) {
@@ -198,7 +199,7 @@ class SpotifyAuth {
         'client_id': clientId,
       };
 
-      print('トークンリクエスト準備完了'); // デバッグ用
+      debugPrint('トークンリクエスト準備完了'); // デバッグ用
 
       final encodedBody = requestBody.entries
           .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
@@ -213,10 +214,10 @@ class SpotifyAuth {
         body: encodedBody,
       );
 
-      print('トークンレスポンス受信: ${response.statusCode}'); // デバッグ用
+      debugPrint('トークンレスポンス受信: ${response.statusCode}'); // デバッグ用
 
       if (response.statusCode != 200) {
-        print('トークンレスポンスエラー: ${response.body}'); // デバッグ用
+        debugPrint('トークンレスポンスエラー: ${response.body}'); // デバッグ用
         Map<String, dynamic> errorBody;
         try {
           errorBody = jsonDecode(response.body);
@@ -231,7 +232,7 @@ class SpotifyAuth {
         throw Exception('アクセストークンが応答に含まれていません');
       }
 
-      print('認証完了: ${DateTime.now()}'); // デバッグ用
+      debugPrint('認証完了: ${DateTime.now()}'); // デバッグ用
 
       final credentials = SpotifyApiCredentials(
         clientId,
@@ -247,8 +248,8 @@ class SpotifyAuth {
       _spotifyApi = SpotifyApi(credentials);
       return _spotifyApi!;
     } catch (e, stackTrace) {
-      print('認証エラー: $e'); // デバッグ用
-      print('スタックトレース: $stackTrace'); // デバッグ用
+      debugPrint('認証エラー: $e'); // デバッグ用
+      debugPrint('スタックトレース: $stackTrace'); // デバッグ用
       await _cleanup();
       rethrow;
     } finally {
@@ -257,12 +258,12 @@ class SpotifyAuth {
   }
 
   static Future<void> dispose() async {
-    print('完全なクリーンアップを開始'); // デバッグ用
+    debugPrint('完全なクリーンアップを開始'); // デバッグ用
     await _cleanup();
     _spotifyApi = null;
     _appLinks = null;
     _isInitialized = false;
     _initializationFuture = null;
-    print('完全なクリーンアップ完了'); // デバッグ用
+    debugPrint('完全なクリーンアップ完了'); // デバッグ用
   }
 } 
