@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spotify/spotify.dart';
-import 'package:rhythm_mile/auth/spotify_auth.dart';
 
 class SpotifyRepository {
   final SpotifyApi _spotify;
@@ -8,13 +7,12 @@ class SpotifyRepository {
   SpotifyRepository(this._spotify);
 
   Future<List<PlaylistSimple>> getUserPlaylists() async {
-    final me = await _spotify.me.get();
     final playlists = <PlaylistSimple>[];
     var offset = 0;
     const limit = 20;
     
     while (true) {
-      final page = await _spotify.playlists.me.getPage(limit, offset);
+      final page = await _spotify.me.playlists.saved().getPage(limit, offset);
       if (page.items == null || page.items!.isEmpty) break;
       
       playlists.addAll(page.items!);
@@ -30,10 +28,8 @@ class SpotifyRepository {
     return await _spotify.playlists.get(playlistId);
   }
 
-  Future<Playlist> createPlaylist(String name, {String? description}) async {
-    final me = await _spotify.me.get();
-    return await _spotify.playlists.createPlaylist(
-      me.id!,
+  Future<Playlist> createPlaylist(String name, {String? description}) {
+    return _spotify.me.playlists.create(
       name,
       description: description,
       public: false,

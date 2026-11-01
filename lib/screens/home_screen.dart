@@ -5,9 +5,9 @@ class HomeScreen extends StatefulWidget {
   final SpotifyApi spotify;
 
   const HomeScreen({
-    Key? key,
+    super.key,
     required this.spotify,
-  }) : super(key: key);
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -31,8 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _error = null;
       });
 
-      final me = await widget.spotify.me.get();
-      final playlistsPage = await widget.spotify.playlists.me.all();
+      final playlistsPage = await widget.spotify.me.playlists.saved().all();
       
       setState(() {
         _playlists = playlistsPage.toList();
