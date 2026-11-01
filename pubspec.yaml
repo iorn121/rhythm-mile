@@ -64,7 +64,7 @@ dependencies:
 
   # New dependencies
   url_launcher: ^6.2.5
-  app_links: ^3.5.0
+  app_links: ^7.2.2
 
   # Added crypto package
   crypto: ^3.0.3
