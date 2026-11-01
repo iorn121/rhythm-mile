@@ -63,7 +63,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
 
   # New dependencies
-  url_launcher: ^6.2.5
+  url_launcher: ^6.3.3
   app_links: ^3.5.0
 
   # Added crypto package
