@@ -67,7 +67,7 @@ dependencies:
   app_links: ^3.5.0
 
   # Added crypto package
-  crypto: ^3.0.3
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:
